@@ -1,9 +1,9 @@
 .data
 	.align 2
-k:      .word    29      # include a null character to terminate string
+k:      .word    4          # include a null character to terminate string
 s:      .asciiz "bac"
 n:      .word   1
-L:      .asciiz "fuck you claudio you of shit"
+L:      .asciiz "abc"
         #.asciiz "bbc"
         #.asciiz "cba"
         #.asciiz "cde"
@@ -28,15 +28,16 @@ main:
     move $s3,$v0            # $s3: base address of a string array
 # record addresses of declared strings into a string array:  
     move $t0,$s2            # $t0: counter i = n
-    move $t1,$s3            # $t1: address pointer j 
+    move $t1,$s3            # $t1: base address of a string array (j) 
     la $t2,L                # $t2: address of declared list L
 READ_DATA:
-    blez $t0,FIND           # if i >0, read string from L
+    # add strings to array
+    blez $t0, FIND          # if i > 0, read string from L
     sw $t2,($t1)            # put the address of a string into string array.
     
-    addi $t0,$t0,-1
-    addi $t1,$t1,4
-    add $t2,$t2,$s0
+    addi $t0, $t0, -1       # decrement counter
+    addi $t1, $t1, 4        # increment the array to the next element
+    add $t2, $t2, $s0       # increment to the next string in the list L
     j READ_DATA
  
 FIND: 
@@ -44,18 +45,16 @@ FIND:
 
     #BEFORE
     # la $a0, L
-    #la $a1, 4($a0) #a1 = a0 + 3, but a0 is not changed
+    # la $a1, 4($a0) #a1 = a0 + 3, but a0 is not changed
     
     #AFTER
-	la	$a0, L		# Load the start address of the array
+	la	$a0, L		        # Load the start address of the array
 	add $a1, $a0, $s0       # a1 = a0 + n
 	addi $a1, $a1, -1       # a1 = a1 - 1 (because of the null character)
 	la $a1, ($a1)           # obtain the last address of the array
 	
-	
-
-	jal	mergesort		# Call the merge sort function
-  	b	sortend			# We are finished sorting
+	jal	mergesort		    # Call the merge sort function
+  	b	sortend			    # We are finished sorting
 	
 ##
 # Recrusive mergesort function
@@ -64,22 +63,18 @@ FIND:
 # @param $a1 last address of the array
 ##
 
-
-
 #mergesort needs to be in a loop
-
-
 mergesort:
-
+    # preserve the program state
 	addi $sp, $sp, -16		    # Adjust stack pointer
 	sw	$ra, 0($sp)		        # Store the return address on the stack
 	sw	$a0, 4($sp)		        # Store the array start address on the stack
 	sw	$a1, 8($sp)		        # Store the array end address on the stack
 	
-	sub 	$t0, $a1, $a0		# Calculate the difference between the start and end address (i.e. number of elements * 4)
+	sub $t0, $a1, $a0		    # t0 : difference between the start and end address (i.e. number of elements * 4)
     
-    li $t1, 1
-	ble	$t0, $t1, mergesortend	# If the array only contains a single element, just return
+    li $t1, 1                   # t1 : 1 (int)
+	ble	$t0, $t1, mergesortend	# If (num elements in list <= 1) end
 	
 	srl	$t0, $t0, 1		        # Divide the array size by 2 to half the number of elements (shift right 3 bits)
 	add	$a1, $a0, $t0		    # Calculate the midpoint address of the array
