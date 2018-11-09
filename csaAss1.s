@@ -1,9 +1,9 @@
-.data
-	.align 2
-k:      .word    4          # include a null character to terminate string
+        .data
+	    .align 2
+k:      .word    12                  # include a null character to terminate string
 s:      .asciiz "bac"
 n:      .word   1
-L:      .asciiz "abc"
+L:      .asciiz "hello harry"
         #.asciiz "bbc"
         #.asciiz "cba"
         #.asciiz "cde"
@@ -15,30 +15,30 @@ L:      .asciiz "abc"
 ### MainCode Module ###
 ### ### ### ### ### ###
 main:
-    li $t9,4                # $t9 = constant 4
+    li    $t9,4                     # t9: constant 4
     
-    lw $s0,k                # $s0: length of the key word
-    la $s1,s                # $s1: key word
-    lw $s2,n                # $s2: size of string list
+    lw    $s0,k                     # s0: length of the key word
+    la    $s1,s                     # s1: key word
+    lw    $s2,n                     # s2: size of string list
     
 # allocate heap space for string array:    
-    li $v0,9                # syscall code 9: allocate heap space
-    mul $a0,$s2,$t9         # calculate the amount of heap space
+    li    $v0,9                     # syscall code 9: allocate heap space
+    mul   $a0,$s2,$t9               # calculate the amount of heap space
     syscall
-    move $s3,$v0            # $s3: base address of a string array
+    move  $s3,$v0                   # s3: base address of a string array
 # record addresses of declared strings into a string array:  
-    move $t0,$s2            # $t0: counter i = n
-    move $t1,$s3            # $t1: base address of a string array (j) 
-    la $t2,L                # $t2: address of declared list L
+    move  $t0,$s2                   # t0: counter i = n
+    move  $t1,$s3                   # t1: base address of a string array (j) 
+    la    $t2,L                     # t2: address of declared list L
 READ_DATA:
     # add strings to array
-    blez $t0, FIND          # if i > 0, read string from L
-    sw $t2,($t1)            # put the address of a string into string array.
+    blez  $t0, FIND                 # if i > 0, read string from L
+    sw    $t2,($t1)                 # put the address of a string into string array.
     
-    addi $t0, $t0, -1       # decrement counter
-    addi $t1, $t1, 4        # increment the array to the next element
-    add $t2, $t2, $s0       # increment to the next string in the list L
-    j READ_DATA
+    addi  $t0, $t0, -1              # decrement counter
+    addi  $t1, $t1, 4               # increment the array to the next element
+    add   $t2, $t2, $s0             # increment to the next string in the list L
+    j     READ_DATA
  
 FIND: 
 ### write your code ###
@@ -48,125 +48,127 @@ FIND:
     # la $a1, 4($a0) #a1 = a0 + 3, but a0 is not changed
     
     #AFTER
-	la	$a0, L		        # Load the start address of the array
-	add $a1, $a0, $s0       # a1 = a0 + n
-	addi $a1, $a1, -1       # a1 = a1 - 1 (because of the null character)
-	la $a1, ($a1)           # obtain the last address of the array
+	la	 $a0, L		                # a0: start address of the array of strings
+	add  $a1, $a0, $s0              # a1: a0 + n (num words in list)
+	addi $a1, $a1, -1               # a1: a1 - 1 (because of the null character)
+	la   $a1, ($a1)                 # obtain the last address of the array
 	
-	jal	mergesort		    # Call the merge sort function
-  	b	sortend			    # We are finished sorting
+	jal	 merge_sort		            # Call the merge sort function
+  	b	 print_and_end	            # sort complete
 	
-##
-# Recrusive mergesort function
+# Recrusive mergesort
 #
-# @param $a0 first address of the array
-# @param $a1 last address of the array
-##
-
-#mergesort needs to be in a loop
-mergesort:
-    # preserve the program state
-	addi $sp, $sp, -16		    # Adjust stack pointer
-	sw	$ra, 0($sp)		        # Store the return address on the stack
-	sw	$a0, 4($sp)		        # Store the array start address on the stack
-	sw	$a1, 8($sp)		        # Store the array end address on the stack
+# @p a0: first address of the array
+# @p a1: last address of the array
+merge_sort:
+    # store machine state
+	addi $sp, $sp, -16		        # adjust the stack pointer so we can store the values on the stack
+	sw	 $ra, 0($sp)		        # store the return address on the stack
+	sw	 $a0, 4($sp)		        # store the array start address on the stack
+	sw	 $a1, 8($sp)		        # store the array end address on the stack
 	
-	sub $t0, $a1, $a0		    # t0 : difference between the start and end address (i.e. number of elements * 4)
+	sub  $t0, $a1, $a0		        # t0: start address - end address (i.e. number of elements * 4)
     
-    li $t1, 1                   # t1 : 1 (int)
-	ble	$t0, $t1, mergesortend	# If (num elements in list <= 1) end
+    li   $t1, 1                     # t1: 1 (int)
+    sub  $t1, $t0, $t1              # t1: num elements - 1
+    blez $t1, mergesort_end         # if num elements - 1 <= 0 (num elements <= 1)
 	
-	srl	$t0, $t0, 1		        # Divide the array size by 2 to half the number of elements (shift right 3 bits)
-	add	$a1, $a0, $t0		    # Calculate the midpoint address of the array
-	sw	$a1, 12($sp)		    # Store the array midpoint address on the stack
+	li   $t9, 2                     # t9: 2 (int)
+	div	 $t0, $t0, $t9		        # t0: array size / 2
+	add	 $a1, $a0, $t0		        # a1: leftP + (size / 2) = midP
+	sw	 $a1, 12($sp)		        # store midP address on the stack
 	
-	jal	mergesort		        # Call recursively on the first half of the array
+	jal	 merge_sort		            # call recursively on the first part of the array
 	
-	lw	$a0, 12($sp)		    # Load the midpoint address of the array from the stack
-	lw	$a1, 8($sp)		        # Load the end address of the array from the stack
+	lw	 $a0, 12($sp)		        # a0: load midP address
+	lw	 $a1, 8($sp)		        # a1: load rightP address
 	
-	jal	mergesort		        # Call recursively on the second half of the array
+	jal	 merge_sort		            # call recursively on the second part of the array
 	
-	lw	$a0, 4($sp)		        # Load the array start address from the stack
-	lw	$a1, 12($sp)		    # Load the array midpoint address from the stack
-	lw	$a2, 8($sp)		        # Load the array end address from the stack
+	lw	 $a0, 4($sp)		        # a0: left pointer
+	lw	 $a1, 12($sp)		        # a1: mid pointer
+	lw	 $a2, 8($sp)		        # a2: right pointer (end address)
 	
-	jal	merge			        # Merge the two array halves
+	jal	 merge			            # merge the two array halves
 	
-mergesortend:				
+mergesort_end:				
 
-	lw	$ra, 0($sp)		        # Load the return address from the stack
-	addi	$sp, $sp, 16		# Adjust the stack pointer
-	jr	$ra			            # Return 
+	lw	 $ra, 0($sp)		        # load the return address from the stack
+	addi $sp, $sp, 16		        # adjust the stack pointer
+	jr	 $ra			            # return 
 	
-##
-# Merge two sorted, adjacent arrays into one, in-place
+# merge two sorted arrays
 #
-# @param $a0 First address of first array
-# @param $a1 First address of second array
-# @param $a2 Last address of second array
-##
+# @p a0: first address of first array
+# @p a1: first address of second array
+# @p a2: last address of second array
 merge:
-	addi    $sp, $sp, -16		# Adjust the stack pointer
-	sw	$ra, 0($sp)		        # Store the return address on the stack
-	sw	$a0, 4($sp)		        # Store the start address on the stack
-	sw	$a1, 8($sp)		        # Store the midpoint address on the stack
-	sw	$a2, 12($sp)		    # Store the end address on the stack
+    # preserve machine state
+	addi $sp, $sp, -16		        # Adjust the stack pointer
+	sw	 $ra, 0($sp)		        # store return address
+	sw	 $a0, 4($sp)		        # store start address
+	sw	 $a1, 8($sp)		        # store midpoint address
+	sw	 $a2, 12($sp)		        # store end address
 	
-	move	$s0, $a0		    # Create a working copy of the first half address
-	move	$s1, $a1		    # Create a working copy of the second half address
+	move $s0, $a0		            # copy of the first half address
+	move $s1, $a1		            # copy of the second half address
 	
-mergeloop:
+merge_loop:
 
-	lbu	$t0, 0($s0)		        # Load the first half position pointer
-	lbu	$t1, 0($s1)		        # Load the second half position pointer
+	lbu	 $t0, 0($s0)		        # load first half pointer
+	lbu	 $t1, 0($s1)		        # load second half pointer
 	
-	bgt	$t1, $t0, noshift	    # If the lower value is already first, don't shift
+	sub  $t9, $t0, $t1              # t9: a[0] - b[0]
+	blez $t9, dont_move             # if (a[0] - b[0] <= 0) (a[0] <= b[0])
 	
-	move	$a0, $s1		    # Load the argument for the element to move
-	move	$a1, $s0		    # Load the argument for the address to move it to
-	jal	shift			        # Shift the element to the new position 
+	move $a0, $s1		            # Load the argument for the element to move
+	move $a1, $s0		            # Load the argument for the address to move it to
+	jal	 change_index			    # move the element to the new position 
 	
-	addi	$s1, $s1, 1		    # Increment the second half index
-noshift:
-	addi	$s0, $s0, 1		    # Increment the first half index
+	addi $s1, $s1, 1		        # s1: second half pointer++
+dont_move:
+	addi $s0, $s0, 1		        # s0: first half pointer++
 	
-	lw	$a2, 12($sp)		    # Reload the end address
-	bge	$s0, $a2, mergeloopend	# End the loop when both halves are empty
-	bge	$s1, $a2, mergeloopend	# End the loop when both halves are empty
-	b	mergeloop
+	lw	 $a2, 12($sp)		        # a2: load the end address
 	
-mergeloopend:
+	sub  $t9, $s0, $a2
+	bgez $t9, mergeloop_end         # end when both halves are empty (s0 >= a2)
 	
-	lw	$ra, 0($sp)		        # Load the return address
-	addi	$sp, $sp, 16		# Adjust the stack pointer
-	jr 	$ra			            # Return
+	sub  $t9, $s1, $a2
+	bgez $t9, mergeloop_end         # end when both halves are empty (s1 >= a2)
+	
+	b    merge_loop
+	
+mergeloop_end:
+	
+	lw   $ra, 0($sp)		        # Load return address
+	addi $sp, $sp, 16		        # Adjust the stack pointer
+	jr   $ra			            # Return
 
-##
-# Shift an array element to another position, at a lower address
+# move an element in the array to an index lower than current
 #
-# @param $a0 address of element to shift
-# @param $a1 destination address of element
-##
-shift:
-	li	$t0, 10
-	ble	$a0, $a1, shiftend	    # If we are at the location, stop shifting
-	addi	$t6, $a0, -1		# Find the previous address in the array
-	lbu	$t7, 0($a0)		        # Get the current pointer
-	lbu	$t8, 0($t6)		        # Get the previous pointer
-	sb	$t7, 0($t6)		        # Save the current pointer to the previous address
-	sb	$t8, 0($a0)		        # Save the previous pointer to the current address
-	move	$a0, $t6	        # Shift the current position back
-	b 	shift			        # Loop again
-shiftend:
-	jr	$ra			            # Return
+# @p a0: value to shift (address of)
+# @p a1: address to move to
+change_index:
+	li   $t0, 10
+	ble	 $a0, $a1, changeindex_end	# If we are at the location, stop shifting
+	addi $t6, $a0, -1		        # Find the previous address in the array
+	lbu	 $t7, 0($a0)		        # Get the current pointer
+	lbu	 $t8, 0($t6)		        # Get the previous pointer
+	sb   $t7, 0($t6)		        # Save the current pointer to the previous address
+	sb   $t8, 0($a0)		        # Save the previous pointer to the current address
+	move $a0, $t6	                # Shift the current position back
+	b    change_index		        # Loop again
 	
-sortend:				        # Point to jump to when sorting is complete
+changeindex_end:
+	jr	 $ra			            # Return
+	
+print_and_end:				        # Point to jump to when sorting is complete
 # Print out the indirect array
-	li	$t0, 0				    # Initialize the current index
-	                            # We are finished
-	la $a0 L
-	li $v0 4
+	li   $t0, 0				        # Initialize the current index
+	                                # We are finished
+	la   $a0 L
+	li   $v0 4
 	syscall
-	li	$v0,10
+	li   $v0,10
 	syscall
