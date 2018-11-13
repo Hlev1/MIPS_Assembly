@@ -1,11 +1,11 @@
         .data
 	    .align 2
-k:      .word    12                  # include a null character to terminate string
-s:      .asciiz "bac"
-n:      .word   1
-L:      .asciiz "hello harry"
-        #.asciiz "bbc"
-        #.asciiz "cba"
+k:      .word   3                   # include a null character to terminate string
+s:      .asciiz "ba"
+n:      .word   3
+L:      .asciiz "db"
+        .asciiz "bc"
+        .asciiz "ba"
         #.asciiz "cde"
         #.asciiz "dde"
         #.asciiz "dec"
@@ -32,15 +32,68 @@ main:
     la    $t2,L                     # t2: address of declared list L
 READ_DATA:
     # add strings to array
-    blez  $t0, FIND                 # if i > 0, read string from L
+    blez  $t0, NEW_FIND             # if i > 0, read string from L
     sw    $t2,($t1)                 # put the address of a string into string array.
     
     addi  $t0, $t0, -1              # decrement counter
     addi  $t1, $t1, 4               # increment the array to the next element
     add   $t2, $t2, $s0             # increment to the next string in the list L
     j     READ_DATA
- 
-FIND: 
+
+NEW_FIND:
+    move  $t0, $s2                  # t0: counter = n
+    move  $t1, $s3                  # t1: base address of a string array
+    lw    $t2, L
+    # Go on to loop through the array, sorting each element
+    
+Loop:
+    blez  $t0, count_equal          # if (counter <= 0) the list items are all sorted, so count the number of equal strings
+    # Load the string in the array at the position count
+    lw    $a0, ($t1)                # Load the ith string from the list
+    
+    # TO CALL MERGE SORT YOU MUST GIVE THE PARAMS
+    la    $a0, L                    # a0: start address of the array of strings
+    add   $a1, $a0, $s0             # a1: a0 + k (length of word)
+    addi  $a1, $a1, -1              # a1: a1 - 1 (because of the null character)
+    
+    # store machine state
+	addi $sp, $sp, -8		        # adjust the stack pointer so we can store the values on the stack
+	sw	 $t0, 0($sp)		        # store the counter on the stack
+	sw   $t1, 4($sp)                # store the current base address of the string array on the stack
+    #####################
+    
+    # PRINT UN-SORTED
+    #li    $v0, 4
+    #syscall
+    ##############
+    
+    jal   merge_sort                # sort string
+    
+    jal   get_sorted                # v0: sorted string collected (un-desireable method, but works for now)
+    
+    # preserve program state
+	lw	 $t0, 0($sp)		        # load the counter from the stack
+	lw   $t1, 4($sp)                # load the base address of the string array from the stack
+    ########################
+    
+    # PRINT SORTED
+    move  $a0, $v0
+    li    $v0, 4
+    syscall
+    ##############
+    
+    addi  $t0, $t0, -1              # t0: t0 - 1 (decrement the counter)
+    addi  $t1, $t1, 4               # t1: t1 + 4 (increment the array to the next element)
+    j     Loop
+    
+
+count_equal:
+    li    $v0, 10
+    syscall
+    
+
+
+OLD_FIND: 
 ### write your code ###
 
     #BEFORE
@@ -48,8 +101,8 @@ FIND:
     # la $a1, 4($a0) #a1 = a0 + 3, but a0 is not changed
     
     #AFTER
-	la	 $a0, L		                # a0: start address of the array of strings
-	add  $a1, $a0, $s0              # a1: a0 + n (num words in list)
+	lw	 $a0, L		                # a0: start address of the array of strings
+	add  $a1, $a0, $s0              # a1: a0 + k (length of word)
 	addi $a1, $a1, -1               # a1: a1 - 1 (because of the null character)
 	la   $a1, ($a1)                 # obtain the last address of the array
 	
@@ -163,12 +216,11 @@ change_index:
 changeindex_end:
 	jr	 $ra			            # Return
 	
-print_and_end:				        # Point to jump to when sorting is complete
+get_sorted:				            # Point to jump to when sorting is complete
 # Print out the indirect array
 	li   $t0, 0				        # Initialize the current index
 	                                # We are finished
-	la   $a0 L
-	li   $v0 4
-	syscall
-	li   $v0,10
-	syscall
+	#la   $a0 L
+	
+	la   $v0, L
+	jr $ra
