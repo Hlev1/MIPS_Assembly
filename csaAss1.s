@@ -49,6 +49,8 @@ FIND:
     sw    $t1, 0($sp)               # store the base address of the list so that we can collect the list of sorted items after
     # Go on to loop through the array, sorting each element
     
+    move  $t5, $t1
+    
 Loop:
     blez  $t0, count_equal          # if (counter <= 0) the list items are all sorted, so count the number of equal strings
     
@@ -91,17 +93,54 @@ Loop:
     
 
 count_equal:
+    lw    $t0, n                    # t0: counter to check how many strings there are left to compare
+    li    $t1, 0                    # t1: counter to track how many strings are equal
+    lw    $a1, s                    # a1: word to check against
+    lw    $a2, k                    # a2: length of word we are comparing
+    addi  $a2, $a2, -1              # a2: a2 - 1 (remove null character)
     #preserve machine state
-    lw    $t1, 0($sp)               # store the base address of the list so that we can collect the list of sorted items after
-    addi  $sp, $sp, 4
+    lw    $t2, 0($sp)               # t2: base address of the list of sorted strings
+    addi  $sp, $sp, 4               # adjust the stack pointer
+
+count_equal_loop:
+    blez  $t0, count_equal_end      # while (t0 > 0)
+    lw    $a0, 0($t2)
     
+    
+    jal   compare_strings           # compare the strings in a0 and a1
+    
+    
+    add   $t1, $t1, $v0             # update the counter with the result of the string comparison
+    addi  $t2, $t2, 4               # move to the next word
+    addi  $t0, $t0, -1              # decrease the word count by 1
+    j     count_equal_loop
+
+count_equal_end:
     move  $a0, $t1
-    li    $v0, 4
+    li    $v0, 1
     syscall
     
     li    $v0, 10
     syscall
+
+# Compare two strings, returning 1 if equal, 0 if not
+#
+# @p a0: first string
+# @p a1: second string
+# @p a2: length of string (minus the newline space)
+# @p a3: our counter to track how many characters we have compared
+compare_strings:
     
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    jr   $ra
 
 # Recrusive mergesort
 #
