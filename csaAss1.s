@@ -69,7 +69,6 @@ Loop:
     #####################
     
     jal   merge_sort                # sort string
-    #jal   get_sorted                # v0: sorted string collected (un-desireable method, but works for now)
     
     # preserve machine state
 	lw	  $t0, 0($sp)		        # load the counter from the stack
@@ -218,10 +217,3 @@ change_index:
 	
 changeindex_end:
 	jr	 $ra			            # Return
-	
-get_sorted:				            # Point to jump to when sorting is complete
-# Print out the indirect array
-	li   $t0, 0				        # Initialize the current index
-	                                # We are finished
-	la   $v0, L
-	jr $ra
