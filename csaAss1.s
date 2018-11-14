@@ -1,14 +1,14 @@
         .data
 	    .align 2
-k:      .word   3                   # include a null character to terminate string
-s:      .asciiz "ba"
-n:      .word   3
-L:      .asciiz "db"
-        .asciiz "bc"
-        .asciiz "ba"
-        #.asciiz "cde"
-        #.asciiz "dde"
-        #.asciiz "dec"
+k:      .word   4                   # include a null character to terminate string
+s:      .asciiz "bac"
+n:      .word   6
+L:      .asciiz "abc"
+        .asciiz "bbc"
+        .asciiz "cba"
+        .asciiz "cde"
+        .asciiz "dde"
+        .asciiz "dec"
 	
     .text
 ### ### ### ### ### ###
@@ -48,32 +48,33 @@ NEW_FIND:
     
 Loop:
     blez  $t0, count_equal          # if (counter <= 0) the list items are all sorted, so count the number of equal strings
-    # Load the string in the array at the position count
-    lw    $a0, ($t1)                # Load the ith string from the list
+    
+    # Print the un-sorted string
+    lw    $a0, ($t1)
+    li    $v0, 4
+    syscall
+    ############################
     
     # TO CALL MERGE SORT YOU MUST GIVE THE PARAMS
-    la    $a0, L                    # a0: start address of the array of strings
-    add   $a1, $a0, $s0             # a1: a0 + k (length of word)
+    # Load the string in the array at the position count
+    lw    $a0, ($t1)                # a0: ith string from the list
+    lw    $s0, k
+    add   $a1, $a0, $s0             # a1: a0 + k (length of word) # S0 USED IN THE MERGESORT, SO WE MUST REASSIGN THIS
     addi  $a1, $a1, -1              # a1: a1 - 1 (because of the null character)
     
     # store machine state
-	addi $sp, $sp, -8		        # adjust the stack pointer so we can store the values on the stack
-	sw	 $t0, 0($sp)		        # store the counter on the stack
-	sw   $t1, 4($sp)                # store the current base address of the string array on the stack
+	addi  $sp, $sp, -8		        # adjust the stack pointer so we can store the values on the stack
+	sw	  $t0, 0($sp)		        # store the counter on the stack
+	sw    $t1, 4($sp)               # store the current base address of the string array on the stack
     #####################
     
-    # PRINT UN-SORTED
-    #li    $v0, 4
-    #syscall
-    ##############
-    
     jal   merge_sort                # sort string
+    #jal   get_sorted                # v0: sorted string collected (un-desireable method, but works for now)
     
-    jal   get_sorted                # v0: sorted string collected (un-desireable method, but works for now)
-    
-    # preserve program state
-	lw	 $t0, 0($sp)		        # load the counter from the stack
-	lw   $t1, 4($sp)                # load the base address of the string array from the stack
+    # preserve machine state
+	lw	  $t0, 0($sp)		        # load the counter from the stack
+	lw    $t1, 4($sp)               # load the base address of the string array from the stack
+	addi  $sp, $sp, 8		        # adjust the stack pointer back
     ########################
     
     # PRINT SORTED
@@ -81,7 +82,7 @@ Loop:
     li    $v0, 4
     syscall
     ##############
-    
+
     addi  $t0, $t0, -1              # t0: t0 - 1 (decrement the counter)
     addi  $t1, $t1, 4               # t1: t1 + 4 (increment the array to the next element)
     j     Loop
@@ -143,6 +144,8 @@ merge_sort:
 	lw	 $a2, 8($sp)		        # a2: right pointer (end address)
 	
 	jal	 merge			            # merge the two array halves
+	
+	move $v0, $a0                   # move the sorted value to be returned
 	
 mergesort_end:				
 
@@ -220,7 +223,5 @@ get_sorted:				            # Point to jump to when sorting is complete
 # Print out the indirect array
 	li   $t0, 0				        # Initialize the current index
 	                                # We are finished
-	#la   $a0 L
-	
 	la   $v0, L
 	jr $ra
