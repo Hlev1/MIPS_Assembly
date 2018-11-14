@@ -3,8 +3,8 @@
 k:      .word   4                   # include a null character to terminate string
 s:      .asciiz "bac"
 n:      .word   6
-L:      .asciiz "abc"
-        .asciiz "bbc"
+L:      .asciiz "cba"
+        .asciiz "bca"
         .asciiz "cba"
         .asciiz "cde"
         .asciiz "dde"
@@ -93,9 +93,17 @@ Loop:
     
 
 count_equal:
+    lw    $s0, k
+    la    $a0, s                    # a0: word to check against
+    add   $a1, $a0, $s0             # a1: a0 + k (size of string)
+    addi  $a1, $a1, -1              # a1: a1 - 1 (because of the null character
+    
+    jal merge_sort
+    
+    move  $t5, $v0                  # a1: sorted word to check against
+
     lw    $t0, n                    # t0: counter to check how many strings there are left to compare
     li    $t1, 0                    # t1: counter to track how many strings are equal
-    lw    $a1, s                    # a1: word to check against
     lw    $a2, k                    # a2: length of word we are comparing
     addi  $a2, $a2, -1              # a2: a2 - 1 (remove null character)
     #preserve machine state
@@ -103,12 +111,11 @@ count_equal:
     addi  $sp, $sp, 4               # adjust the stack pointer
 
 count_equal_loop:
+    move  $a1, $t5                  # reset the key word (gets changed during the compare_strings method)
     blez  $t0, count_equal_end      # while (t0 > 0)
     lw    $a0, 0($t2)
     
-    
     jal   compare_strings           # compare the strings in a0 and a1
-    
     
     add   $t1, $t1, $v0             # update the counter with the result of the string comparison
     addi  $t2, $t2, 4               # move to the next word
@@ -128,19 +135,26 @@ count_equal_end:
 # @p a0: first string
 # @p a1: second string
 # @p a2: length of string (minus the newline space)
-# @p a3: our counter to track how many characters we have compared
+# @p a3: c - our counter to track how many characters we have compared
 compare_strings:
     
+    lbu   $t6, 0($a0)
+    lb    $t7, 0($a1)
     
+    bne   $t6, $t7, compare_strings_end
+
+    addi  $a0, $a0, 1               # increment to next character
+    addi  $a1, $a1, 1               # increment to next character
+    addi  $a3, $a3, 1
+    sub   $t9, $a2, $a3             # t9: k - c (counter)
+    bgtz  $t9, compare_strings      # loop while our counter is less to the length of the string
     
-    
-    
-    
-    
-    
-    
-    
-    jr   $ra
+    li    $v0, 1
+    jr    $ra
+
+compare_strings_end:
+    li    $v0, 0
+    jr    $ra
 
 # Recrusive mergesort
 #
