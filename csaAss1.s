@@ -123,12 +123,8 @@ count_equal_loop:
     j     count_equal_loop
 
 count_equal_end:
-    move  $a0, $t1
-    li    $v0, 1
-    syscall
-    
-    li    $v0, 10
-    syscall
+    move  $v0, $t1
+    j $ra
 
 # Compare two strings, returning 1 if equal, 0 if not
 #
