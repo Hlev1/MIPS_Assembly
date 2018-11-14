@@ -44,15 +44,18 @@ NEW_FIND:
     move  $t0, $s2                  # t0: counter = n
     move  $t1, $s3                  # t1: base address of a string array
     lw    $t2, L
+    #store machine state
+    addi  $sp, $sp, -4
+    sw    $t1, 0($sp)               # store the base address of the list so that we can collect the list of sorted items after
     # Go on to loop through the array, sorting each element
     
 Loop:
     blez  $t0, count_equal          # if (counter <= 0) the list items are all sorted, so count the number of equal strings
     
     # Print the un-sorted string
-    lw    $a0, ($t1)
-    li    $v0, 4
-    syscall
+    #lw    $a0, ($t1)
+    #li    $v0, 4
+    #syscall
     ############################
     
     # TO CALL MERGE SORT YOU MUST GIVE THE PARAMS
@@ -77,9 +80,9 @@ Loop:
     ########################
     
     # PRINT SORTED
-    move  $a0, $v0
-    li    $v0, 4
-    syscall
+    #move  $a0, $v0
+    #li    $v0, 4
+    #syscall
     ##############
 
     addi  $t0, $t0, -1              # t0: t0 - 1 (decrement the counter)
@@ -88,6 +91,14 @@ Loop:
     
 
 count_equal:
+    #preserve machine state
+    lw    $t1, 0($sp)               # store the base address of the list so that we can collect the list of sorted items after
+    addi  $sp, $sp, 4
+    
+    move  $a0, $t1
+    li    $v0, 4
+    syscall
+    
     li    $v0, 10
     syscall
     
@@ -142,9 +153,15 @@ merge_sort:
 	lw	 $a1, 12($sp)		        # a1: mid pointer
 	lw	 $a2, 8($sp)		        # a2: right pointer (end address)
 	
+	# store the machine state
+	addi $sp, $sp, -4               
+	sw   $a0, 0($sp)                # store a0 on the stack so that we can collect it afterwards to return the output
+	
 	jal	 merge			            # merge the two array halves
 	
-	move $v0, $a0                   # move the sorted value to be returned
+	# preserve the machine state
+	lw   $v0, 0($sp)                # move the sorted value to be returned
+	addi $sp, $sp, 4
 	
 mergesort_end:				
 
