@@ -32,7 +32,7 @@ main:
     la    $t2,L                     # t2: address of declared list L
 READ_DATA:
     # add strings to array
-    blez  $t0, NEW_FIND             # if i > 0, read string from L
+    blez  $t0, FIND                 # if i > 0, read string from L
     sw    $t2,($t1)                 # put the address of a string into string array.
     
     addi  $t0, $t0, -1              # decrement counter
@@ -40,7 +40,7 @@ READ_DATA:
     add   $t2, $t2, $s0             # increment to the next string in the list L
     j     READ_DATA
 
-NEW_FIND:
+FIND:
     move  $t0, $s2                  # t0: counter = n
     move  $t1, $s3                  # t1: base address of a string array
     lw    $t2, L
@@ -103,23 +103,6 @@ count_equal:
     syscall
     
 
-
-OLD_FIND: 
-### write your code ###
-
-    #BEFORE
-    # la $a0, L
-    # la $a1, 4($a0) #a1 = a0 + 3, but a0 is not changed
-    
-    #AFTER
-	lw	 $a0, L		                # a0: start address of the array of strings
-	add  $a1, $a0, $s0              # a1: a0 + k (length of word)
-	addi $a1, $a1, -1               # a1: a1 - 1 (because of the null character)
-	la   $a1, ($a1)                 # obtain the last address of the array
-	
-	jal	 merge_sort		            # Call the merge sort function
-  	b	 print_and_end	            # sort complete
-	
 # Recrusive mergesort
 #
 # @p a0: first address of the array
