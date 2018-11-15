@@ -1,47 +1,44 @@
         .data
 	    .align 2
-k:      .word   4                   # include a null character to terminate string
-s:      .asciiz "bac"
-n:      .word   6
-L:      .asciiz "cba"
-        .asciiz "bca"
-        .asciiz "cba"
-        .asciiz "cde"
-        .asciiz "dde"
-        .asciiz "dec"
+k:      .word   5                   # include a null character to terminate string
+s:      .asciiz "bcad"
+n:      .word   4
+L:      .asciiz "edad"
+        .asciiz "cded"
+        .asciiz "dded"
+        .asciiz "bcad"
 	
     .text
 ### ### ### ### ### ###
 ### MainCode Module ###
 ### ### ### ### ### ###
 main:
-    li    $t9,4                     # t9: constant 4
-    
-    lw    $s0,k                     # s0: length of the key word
-    la    $s1,s                     # s1: key word
-    lw    $s2,n                     # s2: size of string list
-    
+    lw    $s2, n                    # s2: size of string list
+    li    $t9, 4                    # t9: constant 4
+    lw    $s0, k                    # s0: length of the key word
+    la    $s1, s                    # s1: key word
+
 # allocate heap space for string array:    
-    li    $v0,9                     # syscall code 9: allocate heap space
-    mul   $a0,$s2,$t9               # calculate the amount of heap space
+    li    $v0, 9                    # syscall code 9: allocate heap space
+    mul   $a0, $s2, $t9             # calculate the amount of heap space
     syscall
-    move  $s3,$v0                   # s3: base address of a string array
+    move  $s3, $v0                  # s3: base address of a string array
 # record addresses of declared strings into a string array:  
-    move  $t0,$s2                   # t0: counter i = n
-    move  $t1,$s3                   # t1: base address of a string array (j) 
-    la    $t2,L                     # t2: address of declared list L
+    move  $t0, $s2                  # t0: counter i = n
+    move  $t1, $s3                  # t1: base address of a string array (j) 
+    la    $t2, L                    # t2: address of declared list L
     
-READ_DATA:
+get_data:
     # add strings to array
-    blez  $t0, FIND                 # if i > 0, read string from L
+    blez  $t0, find                 # if i > 0, read string from L
     sw    $t2,($t1)                 # put the address of a string into string array.
     
     addi  $t0, $t0, -1              # decrement counter
     addi  $t1, $t1, 4               # increment the array to the next element
     add   $t2, $t2, $s0             # increment to the next string in the list L
-    j     READ_DATA
+    j     get_data
 
-FIND:
+find:
     move  $t0, $s2                  # t0: counter = n
     move  $t1, $s3                  # t1: base address of a string array
     lw    $t2, L
@@ -102,6 +99,7 @@ count_equal:
     addi  $a2, $a2, -1              # a2: a2 - 1 (remove null character)
     #preserve machine state
     lw    $t2, 0($sp)               # t2: base address of the list of sorted strings
+    
     addi  $sp, $sp, 4               # adjust the stack pointer
 
 count_equal_loop:
@@ -166,9 +164,9 @@ merge_sort:
     li   $t1, 1                     # t1: 1 (int)
     sub  $t1, $t0, $t1              # t1: num elements - 1
     blez $t1, mergesort_end         # if num elements - 1 <= 0 (num elements <= 1)
+	# divide by 2 using logical shift to the right by 1
+	srl  $t0, $t0, 1                # t0: array size / 2
 	
-	li   $t9, 2                     # t9: 2 (int)
-	div	 $t0, $t0, $t9		        # t0: array size / 2
 	add	 $a1, $a0, $t0		        # a1: leftP + (size / 2) = midP
 	sw	 $a1, 12($sp)		        # store midP address on the stack
 	
@@ -223,8 +221,8 @@ merge_loop:
 	sub  $t9, $t0, $t1              # t9: a[0] - b[0]
 	blez $t9, dont_move             # if (a[0] - b[0] <= 0) (a[0] <= b[0])
 	
-	move $a0, $s1		            # Load the argument for the element to move
-	move $a1, $s0		            # Load the argument for the address to move it to
+	move $a0, $s1		            # Load the param for the element to move
+	move $a1, $s0		            # Load the param for the address to move it to
 	jal	 change_index			    # move the element to the new position 
 	
 	addi $s1, $s1, 1		        # s1: second half pointer++
@@ -253,14 +251,14 @@ mergeloop_end:
 # @p a1: address to move to
 change_index:
 	li   $t0, 10
-	ble	 $a0, $a1, changeindex_end	# If we are at the location, stop shifting
-	addi $t6, $a0, -1		        # Find the previous address in the array
-	lbu	 $t7, 0($a0)		        # Get the current pointer
-	lbu	 $t8, 0($t6)		        # Get the previous pointer
-	sb   $t7, 0($t6)		        # Save the current pointer to the previous address
-	sb   $t8, 0($a0)		        # Save the previous pointer to the current address
-	move $a0, $t6	                # Shift the current position back
-	b    change_index		        # Loop again
+	ble	 $a0, $a1, changeindex_end	# when we get to the admirable address, stop
+	addi $t6, $a0, -1		        # get previous address
+	lbu	 $t7, 0($a0)		        # get current pointer
+	lbu	 $t8, 0($t6)		        # get previous pointer
+	sb   $t7, 0($t6)		        # save current pointer to the previous address
+	sb   $t8, 0($a0)		        # save previous pointer to the current address
+	move $a0, $t6	                # shift the current position back
+	b    change_index		        # loop
 	
 changeindex_end:
-	jr	 $ra			            # Return
+	jr	 $ra			            # return
