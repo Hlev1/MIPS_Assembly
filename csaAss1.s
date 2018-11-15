@@ -30,6 +30,7 @@ main:
     move  $t0,$s2                   # t0: counter i = n
     move  $t1,$s3                   # t1: base address of a string array (j) 
     la    $t2,L                     # t2: address of declared list L
+    
 READ_DATA:
     # add strings to array
     blez  $t0, FIND                 # if i > 0, read string from L
@@ -116,8 +117,12 @@ count_equal_loop:
     j     count_equal_loop
 
 count_equal_end:
-    move  $v0, $t1
-    j $ra
+    move  $a0, $t1
+    li    $v0, 1
+    syscall
+    
+    li    $v0, 10
+    syscall
 
 # Compare two strings, returning 1 if equal, 0 if not
 #
