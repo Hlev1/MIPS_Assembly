@@ -80,18 +80,11 @@ Loop:
 	lw    $t1, 4($sp)               # load the base address of the string array from the stack
 	addi  $sp, $sp, 8		        # adjust the stack pointer back
     ########################
-    
-    # PRINT SORTED
-    #move  $a0, $v0
-    #li    $v0, 4
-    #syscall
-    ##############
 
     addi  $t0, $t0, -1              # t0: t0 - 1 (decrement the counter)
     addi  $t1, $t1, 4               # t1: t1 + 4 (increment the array to the next element)
     j     Loop
     
-
 count_equal:
     lw    $s0, k
     la    $a0, s                    # a0: word to check against
