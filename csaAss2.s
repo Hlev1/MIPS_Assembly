@@ -28,35 +28,55 @@ INPUT:
     j    INPUT                  # get user input again
     
 SETUP:
-    li   $a0, 0                 # a0 : i
-    sll  $a0, $v0, 2
+    li   $a1, 0                 # a1 : i
+    sll  $a3, $t0, 2            # a3 : number of bytes needed 
     li   $v0, 9
     syscall                     # v0 : address of array space
-    move $a1, $v0               # a1 : address of array space
+    move $a2, $v0               # a2 : address of array space
 
 LOOP:
-                                # a0 : i
+                                # a1 : i
                                 # t0 : counter for the loop
-    beq  $a0, $t0, end
+    beq  $a1, $t0, end
+    
+    # store machine state
+    addi $sp, $sp, -4
+    sw   $t0, ($sp)             # store t0 on the stack
     
     # call fibonacci
     jal FIB
     # print fibonacci return
+    move $a0, $v0
+    li   $v0, 4
+    syscall
+    
+    # preserve machine state
+    lw   $t0, ($sp)
+    addi $sp, $sp, 4            # load t0 from the stack
     
     
-    
-    
-    
-    addi $a0, $a0, 1
+    addi $a1, $a1, 1            # a1: i++
     j    LOOP                   # loop
     
     
 # Fibonacci method of complexity O(n)
 #
-# @p : a0 : n
-# @p : a1 : integer array memo
+# @p : a1 : n
+# @p : a2 : integer array memo
 FIB:
+    blez $a1, FIB0              # if (n <=0) return 0
+    li   $t1, 1                 # t1 : 1
+    beq  $a1, $t1, FIB1         # if (n == 1) return 1
+    addi $a2, $a2, $a1          # increment array pointer to get the position of a[n]
+    lw   $t2, ($a2)             # t2 : a[n]
+    bgtz $t2, 
+    
+    
+FIB0:
 
+FIB1:
+
+FIB2:
 
 
 
