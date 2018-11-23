@@ -1,12 +1,12 @@
         .data
 	    .align 2
-k:      .word   5                   # include a null character to terminate string
-s:      .asciiz "bcad"
+k:      .word   4                   # include a null character to terminate string
+s:      .asciiz "bca"
 n:      .word   4
-L:      .asciiz "edad"
-        .asciiz "cded"
-        .asciiz "dded"
-        .asciiz "bcad"
+L:      .asciiz "eda"
+        .asciiz "cde"
+        .asciiz "dde"
+        .asciiz "bca"
 	
     .text
 ### ### ### ### ### ###
@@ -31,7 +31,23 @@ main:
 get_data:
     # add strings to array
     blez  $t0, find                 # if i > 0, read string from L
-    sw    $t2,($t1)                 # put the address of a string into string array.
+    sw    $t2, ($t1)                # put the address of a string into string array.
+    
+    # store the machine state before validating
+    addi  $sp, $sp, -12             # decrement the stack pointer
+    sw    $t1, 0($sp)               # store t1 on the stack
+    sw    $t3, 4($sp)               # store t3 on the stack
+    sw    $t4, 8($sp)               # store t4 on the stack
+    # load parameters for validation
+    lw    $a0, ($t1)
+    lw    $a1, ($t1)
+    
+    jal   validate_data             # validate the current string to be the same length as k
+    #  preserve the machine state
+    lw    $t1, 0($sp)               # load t1 from the stack
+    lw    $t3, 4($sp)               # load t3 from the stack
+    lw    $t4, 8($sp)               # load t4 from the stack
+    addi  $sp, $sp, 12              # increment the stack pointer back
     
     addi  $t0, $t0, -1              # decrement counter
     addi  $t1, $t1, 4               # increment the array to the next element
@@ -51,12 +67,6 @@ find:
     
 Loop:
     blez  $t0, count_equal          # if (counter <= 0) the list items are all sorted, so count the number of equal strings
-    
-    # Print the un-sorted string
-    #lw    $a0, ($t1)
-    #li    $v0, 4
-    #syscall
-    ############################
     
     # TO CALL MERGE SORT YOU MUST GIVE THE PARAMS
     # Load the string in the array at the position count
@@ -114,12 +124,12 @@ count_equal_loop:
     addi  $t0, $t0, -1              # decrease the word count by 1
     j     count_equal_loop
 
-count_equal_end:
-    move  $a0, $t1
+count_equal_end:                    # this is the endpoint of the program
+    move  $a0, $t1                  # load the total number of anagrams
     li    $v0, 1
-    syscall
+    syscall                         # print the total number of anagrams
     
-    li    $v0, 10
+    li    $v0, 10                   # end the program
     syscall
 
 # Compare two strings, returning 1 if equal, 0 if not
@@ -130,10 +140,10 @@ count_equal_end:
 # @p a3: c - our counter to track how many characters we have compared
 compare_strings:
     
-    lbu   $t6, 0($a0)
-    lb    $t7, 0($a1)
+    lbu   $t6, 0($a0)               # load the ith character from the first word
+    lb    $t7, 0($a1)               # load the ith character from the second word
     
-    bne   $t6, $t7, compare_strings_end
+    bne   $t6, $t7, compare_strings_end # end if the characters are not equal
 
     addi  $a0, $a0, 1               # increment to next character
     addi  $a1, $a1, 1               # increment to next character
@@ -141,14 +151,14 @@ compare_strings:
     sub   $t9, $a2, $a3             # t9: k - c (counter)
     bgtz  $t9, compare_strings      # loop while our counter is less to the length of the string
     
-    li    $v0, 1
-    jr    $ra
+    li    $v0, 1                    # return 1 for strings equal
+    jr    $ra                       # return
 
-compare_strings_end:
-    li    $v0, 0
-    jr    $ra
+compare_strings_end:    
+    li    $v0, 0                    # return 0 for strings not equal
+    jr    $ra                       # return
 
-# Recrusive mergesort
+# recursive mergesort
 #
 # @p a0: first address of the array
 # @p a1: last address of the array
@@ -189,7 +199,7 @@ merge_sort:
 	
 	# preserve the machine state
 	lw   $v0, 0($sp)                # move the sorted value to be returned
-	addi $sp, $sp, 4
+	addi $sp, $sp, 4                # increment the stack pointer back
 	
 mergesort_end:				
 
@@ -241,9 +251,9 @@ dont_move:
 	
 mergeloop_end:
 	
-	lw   $ra, 0($sp)		        # Load return address
-	addi $sp, $sp, 16		        # Adjust the stack pointer
-	jr   $ra			            # Return
+	lw   $ra, 0($sp)		        # load return address
+	addi $sp, $sp, 16		        # adjust the stack pointer
+	jr   $ra			            # return
 
 # move an element in the array to an index lower than current
 #
@@ -262,3 +272,30 @@ change_index:
 	
 changeindex_end:
 	jr	 $ra			            # return
+
+# method to validate the length of each string
+#
+# @p a0: string to be validated
+# @p a1: second copy of string to be validated
+validate_data:
+    lb   $t1, 0($a0)                # get the next character from the string
+    beq  $t1, $zero, end_validation # if the next character is the null character, end
+
+    addi $a0, $a0, 1                # increment the string to the next character
+    j validate_data                 # loop
+    
+end_validation:
+    move $t1, $a1
+    sub  $t3, $a0, $t1              # t3: now contains the length of the string
+    
+    lw   $t4, k                     # t4: k
+    addi $t4, $t4, -1               # t4: k - 1 for the null character
+    
+    bne  $t3, $t4, term_program     # if the string isnt the same length as k, end the program
+    
+    jr   $ra                        # return
+    
+# end the program
+term_program:
+    li   $v0, 10
+    syscall
