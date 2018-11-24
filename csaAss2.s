@@ -40,9 +40,8 @@ LOOP:
     beq  $a1, $t0, end
     
     # store machine state
-    addi $sp, $sp, -8           # decrement the stack
+    addi $sp, $sp, -4           # decrement the stack
     sw   $t0, ($sp)             # store t0 on the stack
-    sw   $a1, ($sp)             # store a1 on the stack
     
     # call fibonacci
     jal FIB
@@ -53,8 +52,7 @@ LOOP:
     
     # preserve machine state
     lw   $t0, ($sp)             # load t0 from the stack
-    lw   $a1, ($sp)             # load a1 from the stack
-    addi $sp, $sp, 8            # increment the stack
+    addi $sp, $sp, 4            # increment the stack
     
     
     addi $a1, $a1, 1            # a1: i++
@@ -67,7 +65,8 @@ LOOP:
 # @p : a2 : integer array memo
 FIB:
     # store machine state
-    addi $sp, $sp, -4
+    addi $sp, $sp, -8
+    sw   $a1, ($sp)             # store a1 on the stack
     sw   $ra, ($sp)             # store the return address on the stack
     
     blez $a1, FIB0              # if (n <=0) return 0
@@ -91,6 +90,10 @@ FIB:
     move $t3, $v0               # t3 : fib(n-2, memo)
     
     add  $t2, $t2, $t3          # t2 : fib(n-1, memo) + fib(n-2, memo)
+    
+    # preserve machine state
+    lw   $a1, ($sp)             # load a1 from the stack
+    addi $sp, $sp, 4            # increment the stack pointer
     
     add  $a2, $a2, $a1          # increment array pointer to get to position of a[n]
     sw   $t2, ($a2)             # store fib(n-1, memo) + fib(n-2, memo) at a[n]
