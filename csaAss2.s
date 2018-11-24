@@ -48,17 +48,17 @@ LOOP:                           #
     # store machine state       #
     addi $sp, $sp, -4           # decrement the stack
     sw   $a1, ($sp)             # store a1 on the stack
-    
-    
-    move $a0, $a1
-    li   $v0, 1
-    syscall
-    
-    la   $a0, colon
-    li   $v0, 4
-    syscall
-    
-    
+                                #
+                                #
+    move $a0, $a1               # print i
+    li   $v0, 1                 #
+    syscall                     #
+                                #
+    la   $a0, colon             # print a colon
+    li   $v0, 4                 #
+    syscall                     #  
+                                #   
+                                #
                                 #
     # call fibonacci            #
     jal  FIB                    # call fib(n)
