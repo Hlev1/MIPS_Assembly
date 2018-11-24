@@ -132,12 +132,6 @@ FIB_MEMO:
     move $v0, $a0
     jr   $ra
     
-
-FIB2:
-
-
-
-
 end:
-    li   $a0, 10
+    li   $v0, 10
     syscall
