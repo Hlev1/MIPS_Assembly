@@ -101,14 +101,7 @@ FIB:
     sub  $a2, $a2, $t8          # decrement array pointer to get the starting position
     
     move $a0, $t2               # a0 : fib(n-1, memo) + fib(n-2, memo)
-    jal  FIB_MEMO
-    
-    
-    # preserve machine state
-    lw   $ra, ($sp)
-    addi $sp, $sp, 4
-    
-    jr   $ra
+    j  FIB_MEMO
     
     
     
@@ -131,6 +124,10 @@ FIB1:
 
 # @p : a0 : memo[n]
 FIB_MEMO:
+    # preserve machine state
+    lw   $ra, ($sp)
+    addi $sp, $sp, 4
+    
     move $v0, $a0
     jr   $ra
     
