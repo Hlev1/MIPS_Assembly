@@ -1,10 +1,11 @@
-# Fibonacci Function O(n)
+# Fibonacci Function of O(n) complexity
         .data
         .align 2
 msg:    .asciiz "\nEnter a number>"
 comma:  .asciiz ","
 errmsg: .asciiz "\nError - must enter a positive integer\n"
 newln:  .asciiz "\n"
+colon:  .asciiz " : "
 zero:   .word   0
 
 .text
@@ -18,7 +19,7 @@ INPUT:                          #
     li   $v0, 5                 #
     syscall                     # read input
                                 # validate data
-    addi $t0, $v0, 0            # t0 : N
+    addi $t0, $v0, 1            # t0 : N + 1 (so that we also print the nth fibonacci number
     bgtz $t0, SETUP             # if (N > 0) go to next step, else input again
                                 #
                                 # invalid input
@@ -47,6 +48,17 @@ LOOP:                           #
     # store machine state       #
     addi $sp, $sp, -4           # decrement the stack
     sw   $a1, ($sp)             # store a1 on the stack
+    
+    
+    move $a0, $a1
+    li   $v0, 1
+    syscall
+    
+    la   $a0, colon
+    li   $v0, 4
+    syscall
+    
+    
                                 #
     # call fibonacci            #
     jal  FIB                    # call fib(n)
