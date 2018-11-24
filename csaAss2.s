@@ -29,7 +29,10 @@ INPUT:
     
 SETUP:
     li   $a1, 0                 # a1 : i
-    sll  $a0, $t0, 2            # a0 : number of bytes needed 
+    
+    addi $t5, $t0, 1            # t5 : N + 1
+    # allocate an array the size of N + 1 because this is how many numbers we print
+    sll  $a0, $t5, 2            # a0 : number of bytes needed 
     li   $v0, 9
     syscall                     # v0 : address of array space
     move $a2, $v0               # a2 : address of array space
