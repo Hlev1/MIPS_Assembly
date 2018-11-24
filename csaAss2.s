@@ -40,8 +40,9 @@ LOOP:
     beq  $a1, $t0, end
     
     # store machine state
-    addi $sp, $sp, -4
+    addi $sp, $sp, -8           # decrement the stack
     sw   $t0, ($sp)             # store t0 on the stack
+    sw   $a1, ($sp)             # store a1 on the stack
     
     # call fibonacci
     jal FIB
@@ -51,8 +52,9 @@ LOOP:
     syscall
     
     # preserve machine state
-    lw   $t0, ($sp)
-    addi $sp, $sp, 4            # load t0 from the stack
+    lw   $t0, ($sp)             # load t0 from the stack
+    lw   $a1, ($sp)             # load a1 from the stack
+    addi $sp, $sp, 8            # increment the stack
     
     
     addi $a1, $a1, 1            # a1: i++
@@ -64,22 +66,28 @@ LOOP:
 # @p : a1 : n
 # @p : a2 : integer array memo
 FIB:
+    # store machine state
+    addi $sp, $sp, -4
+    sw   $ra, ($sp)             # store the return address on the stack
+    
     blez $a1, FIB0              # if (n <=0) return 0
+    
     li   $t1, 1                 # t1 : 1
+    
     beq  $a1, $t1, FIB1         # if (n == 1) return 1
-    add  $a2, $a2, $a1          # increment array pointer to get the position of a[n]
+    
+    add  $a2, $a2, $a1          # a2 : a2 + a1 (increment array pointer to get the position of a[n])
     lw   $a0, ($a2)             # a0 : a[n]
-    bgtz $a0, FIB_MEMO
+    sub  $a2, $a2, $a1          # a2 : a2 - a1 (decrement array pointer to get the starting position)
     
-    # return the array pointer back to the start
-    sub  $a2, $a2, $a1          # decrement array pointer to get the starting position
-    addi $a1, $a1, -1
-    jal  FIB
+    bgtz $a0, FIB_MEMO          # if (a[n] > 0) return a[n]
     
+    addi $a1, $a1, -1           # a1 : a1 - 1
+    jal  FIB                    # v0 : fib(n-1, memo)
     move $t2, $v0               # t2 : fib(n-1, memo)
     
-    addi $a1, $a1, -1
-    jal  FIB
+    addi $a1, $a1, -1           # a1 : a1 - 1
+    jal  FIB                    # v0 : fib(n-2, memo)
     move $t3, $v0               # t3 : fib(n-2, memo)
     
     add  $t2, $t2, $t3          # t2 : fib(n-1, memo) + fib(n-2, memo)
@@ -90,16 +98,29 @@ FIB:
     
     move $a0, $t2               # a0 : fib(n-1, memo) + fib(n-2, memo)
     jal  FIB_MEMO
+    
+    # preserve machine state
+    lw   $ra, ($sp)             # load the return address from the stack
+    addi $sp, $sp, 4
+    
     jr   $ra
     
     
     
     
 FIB0:
+    # preserve machine state
+    lw   $ra, ($sp)             # load the return address from the stack
+    addi $sp, $sp, 4            # increment the stack
+    
     li   $v0, 0
     jr   $ra
 
 FIB1:
+    # preserve machine state
+    lw   $ra, ($sp)             # load the return address from the stack
+    addi $sp, $sp, 4            # increment the stack
+    
     li   $v0, 1
     jr   $ra
 
