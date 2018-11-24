@@ -44,8 +44,7 @@ LOOP:
     beq  $a1, $t0, end
     
     # store machine state
-    addi $sp, $sp, -8           # decrement the stack
-    sw   $t0, ($sp)             # store t0 on the stack
+    addi $sp, $sp, -4           # decrement the stack
     sw   $a1, ($sp)             # store a1 on the stack
     
     # call fibonacci
@@ -56,9 +55,8 @@ LOOP:
     syscall
     
     # preserve machine state
-    lw   $t0, ($sp)             # load t0 from the stack
     lw   $a1, ($sp)
-    addi $sp, $sp, 8            # increment the stack
+    addi $sp, $sp, 4            # increment the stack
     
     
     addi $a1, $a1, 1            # a1: i++
