@@ -41,8 +41,9 @@ LOOP:
     beq  $a1, $t0, end
     
     # store machine state
-    addi $sp, $sp, -4           # decrement the stack
+    addi $sp, $sp, -8           # decrement the stack
     sw   $t0, ($sp)             # store t0 on the stack
+    sw   $a1, ($sp)             # store a1 on the stack
     
     # call fibonacci
     jal FIB
@@ -53,7 +54,8 @@ LOOP:
     
     # preserve machine state
     lw   $t0, ($sp)             # load t0 from the stack
-    addi $sp, $sp, 4            # increment the stack
+    lw   $a1, ($sp)
+    addi $sp, $sp, 8            # increment the stack
     
     
     addi $a1, $a1, 1            # a1: i++
@@ -76,9 +78,10 @@ FIB:
     
     beq  $a1, $t1, FIB1         # if (n == 1) return 1
     
-    add  $a2, $a2, $a1          # a2 : a2 + a1 (increment array pointer to get the position of a[n])
+    sll  $t8, $a1, 2            # calculate number of bytes we need to increment array pointer by
+    add  $a2, $a2, $t8          # a2 : a2 + t8 (increment array pointer to get the position of a[n])
     lw   $a0, ($a2)             # a0 : a[n]
-    sub  $a2, $a2, $a1          # a2 : a2 - a1 (decrement array pointer to get the starting position)
+    sub  $a2, $a2, $t8          # a2 : a2 - t8 (decrement array pointer to get the starting position)
     
     bgtz $a0, FIB_MEMO          # if (a[n] > 0) return a[n]
     
@@ -92,9 +95,10 @@ FIB:
     
     add  $t2, $t2, $t3          # t2 : fib(n-1, memo) + fib(n-2, memo)
     
-    add  $a2, $a2, $a3          # increment array pointer to get to position of a[n]
+    sll  $t8, $a3, 2            # calculate number of bytes we need to increment array pointer by
+    add  $a2, $a2, $t8          # increment array pointer to get to position of a[n]
     sw   $t2, ($a2)             # store fib(n-1, memo) + fib(n-2, memo) at a[n]
-    sub  $a2, $a2, $a3          # decrement array pointer to get the starting position
+    sub  $a2, $a2, $t8          # decrement array pointer to get the starting position
     
     move $a0, $t2               # a0 : fib(n-1, memo) + fib(n-2, memo)
     jal  FIB_MEMO
