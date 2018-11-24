@@ -36,6 +36,7 @@ SETUP:
 
 LOOP:
                                 # a1 : i
+    addi $a3, $a1, 0            # a3 : copy of a1
                                 # t0 : counter for the loop
     beq  $a1, $t0, end
     
@@ -63,10 +64,10 @@ LOOP:
 #
 # @p : a1 : n
 # @p : a2 : integer array memo
+# @p : a3 : copy of n
 FIB:
     # store machine state
-    addi $sp, $sp, -8
-    sw   $a1, ($sp)             # store a1 on the stack
+    addi $sp, $sp, -4
     sw   $ra, ($sp)             # store the return address on the stack
     
     blez $a1, FIB0              # if (n <=0) return 0
@@ -91,19 +92,16 @@ FIB:
     
     add  $t2, $t2, $t3          # t2 : fib(n-1, memo) + fib(n-2, memo)
     
-    # preserve machine state
-    lw   $a1, ($sp)             # load a1 from the stack
-    addi $sp, $sp, 4            # increment the stack pointer
-    
-    add  $a2, $a2, $a1          # increment array pointer to get to position of a[n]
+    add  $a2, $a2, $a3          # increment array pointer to get to position of a[n]
     sw   $t2, ($a2)             # store fib(n-1, memo) + fib(n-2, memo) at a[n]
-    sub  $a2, $a2, $a1          # decrement array pointer to get the starting position
+    sub  $a2, $a2, $a3          # decrement array pointer to get the starting position
     
     move $a0, $t2               # a0 : fib(n-1, memo) + fib(n-2, memo)
     jal  FIB_MEMO
     
+    
     # preserve machine state
-    lw   $ra, ($sp)             # load the return address from the stack
+    lw   $ra, ($sp)
     addi $sp, $sp, 4
     
     jr   $ra
