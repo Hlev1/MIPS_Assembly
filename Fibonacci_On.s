@@ -23,7 +23,7 @@ INPUT:                          #
     bgtz $t0, SETUP             # if (N > 0) go to next step, else input again
                                 #
                                 # invalid input
-    la   $a0, errormsg          # load error message
+    la   $a0, errmsg            # load error message
     li   $v0, 4                 #
     syscall                     # print error message
                                 #
